@@ -4,6 +4,7 @@ if exist bin rmdir /s /q bin
 mkdir bin
 
 echo [PBL] Compiling Banking System...
+
 javac -d bin src/model/*.java src/logging/*.java src/service/*.java src/DB/*.java src/gui/*.java src/main/*.java
 
 if %errorlevel% neq 0 (
@@ -12,6 +13,6 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
-echo [PBL] Launching Application...
+echo [PBL] Launching...
 java -cp bin main.BankingApp
 pause
