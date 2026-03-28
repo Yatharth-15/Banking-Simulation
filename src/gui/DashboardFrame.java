@@ -26,14 +26,13 @@ public class DashboardFrame extends JFrame {
         setLayout(new BorderLayout(20, 20));
         getContentPane().setBackground(new Color(236, 240, 241));
 
-        // 1. Balance Header
         balLabel = new JLabel("Current Balance: ₹" + currentUser.getBalance(), SwingConstants.CENTER);
         balLabel.setFont(new Font("Arial", Font.BOLD, 24));
         balLabel.setForeground(new Color(39, 174, 96));
         balLabel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         add(balLabel, BorderLayout.NORTH);
 
-        // 2. Main Input Panel
+       
         JPanel centerPanel = new JPanel(new GridLayout(4, 1, 10, 10));
         centerPanel.setOpaque(false);
 
@@ -45,7 +44,7 @@ public class DashboardFrame extends JFrame {
         centerPanel.add(p2);
         add(centerPanel, BorderLayout.CENTER);
 
-        // 3. Action Buttons
+      
         JPanel btnPanel = new JPanel(new GridLayout(2, 2, 5, 5));
         JButton depBtn = new JButton("Deposit");
         JButton withBtn = new JButton("Withdraw");
@@ -61,7 +60,7 @@ public class DashboardFrame extends JFrame {
         btnPanel.add(transBtn); btnPanel.add(logoutBtn);
         add(btnPanel, BorderLayout.SOUTH);
 
-        // Logic
+        
         depBtn.addActionListener(e -> handleAction("DEP"));
         withBtn.addActionListener(e -> handleAction("WITH"));
         transBtn.addActionListener(e -> handleTransfer());
@@ -88,6 +87,7 @@ public class DashboardFrame extends JFrame {
         } catch (Exception e) { JOptionPane.showMessageDialog(this, "Error: " + e.getMessage()); }
     }
 
+    @SuppressWarnings("UseSpecificCatch")
     private void handleTransfer() {
         try {
             double amt = Double.parseDouble(amtField.getText());

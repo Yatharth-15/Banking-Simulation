@@ -15,14 +15,12 @@ public class LoginFrame extends JFrame {
     public LoginFrame(List<Account> accounts) {
         this.allAccounts = accounts;
         
-        // Window Setup
         setTitle("Secure Bank Login");
         setSize(400, 500);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new GridLayout(10, 1, 10, 10));
         getContentPane().setBackground(new Color(245, 245, 250));
 
-        // UI Components
         JLabel header = new JLabel("CITY BANK DEHRADUN", SwingConstants.CENTER);
         header.setFont(new Font("Serif", Font.BOLD, 22));
         header.setForeground(new Color(44, 62, 80));
@@ -33,7 +31,6 @@ public class LoginFrame extends JFrame {
         JButton regBtn = new JButton("Register New User");
         styleButton(regBtn, new Color(52, 152, 219)); // Blue
 
-        // Adding to Frame
         add(header);
         add(new JLabel("  Account Number:", SwingConstants.LEFT));
         add(accField);

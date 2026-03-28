@@ -13,13 +13,11 @@ public class Account {
         this.balance = balance;
     }
 
-    // Getters
     public int getAccountNo() { return accountNo; }
     public String getName() { return name; }
     public String getPassword() { return password; }
     public synchronized double getBalance() { return balance; }
 
-    // Logic
     public synchronized void deposit(double amt) { if (amt > 0) balance += amt; }
     public synchronized boolean withdraw(double amt) {
         if (amt > 0 && balance >= amt) { balance -= amt; return true; }

@@ -26,16 +26,12 @@ public class TransactionService {
 
     // 3. TRANSFER (The missing method)
     public boolean transfer(Account from, Account to, double amt) {
-        // Step 1: Try to take money from the sender
+
         if (from.withdraw(amt)) {
-            // Step 2: If successful, give it to the receiver
             to.deposit(amt);
-            
-            // Step 3: Log the success with both names
             logger.log("TRANSFER: From " + from.getName() + " to " + to.getName() + " | Amt: ₹" + amt);
             return true;
         }
-        
         // Step 4: Log the failure
         logger.log("FAILED_TRANSFER: " + from.getName() + " had insufficient funds for ₹" + amt);
         return false;
