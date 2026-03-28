@@ -4,75 +4,105 @@ import DB.AccountDAO;
 import java.awt.*;
 import java.util.List;
 import javax.swing.*;
-import logging.TransactionLogger;
 import model.Account;
+import service.TransactionService;
 
 public class DashboardFrame extends JFrame {
-    // Fields made 'final' to satisfy the hints
-    private final Account acc;
-    private final JLabel balLab;
+    private final Account currentUser;
+    private final List<Account> allAccounts;
+    private final TransactionService service = new TransactionService();
+    
+    private final JLabel balLabel;
     private final JTextField amtField = new JTextField(10);
-    private final TransactionLogger logger = new TransactionLogger();
-    private final List<Account> allAccounts; 
+    private final JTextField targetIdField = new JTextField(10);
 
-    public DashboardFrame(Account acc, List<Account> all) {
-        this.acc = acc; 
-        this.allAccounts = all; // 'allAccounts' is now used in the exit button
+    public DashboardFrame(Account user, List<Account> accounts) {
+        this.currentUser = user;
+        this.allAccounts = accounts;
+
+        setTitle("Bank Dashboard - " + currentUser.getName());
+        setSize(450, 500);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout(20, 20));
+        getContentPane().setBackground(new Color(236, 240, 241));
+
+        // 1. Balance Header
+        balLabel = new JLabel("Current Balance: ₹" + currentUser.getBalance(), SwingConstants.CENTER);
+        balLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        balLabel.setForeground(new Color(39, 174, 96));
+        balLabel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        add(balLabel, BorderLayout.NORTH);
+
+        // 2. Main Input Panel
+        JPanel centerPanel = new JPanel(new GridLayout(4, 1, 10, 10));
+        centerPanel.setOpaque(false);
+
+        JPanel p1 = new JPanel(); p1.add(new JLabel("Amount: ₹")); p1.add(amtField);
+        JPanel p2 = new JPanel(); p2.add(new JLabel("Transfer To (ID): ")); p2.add(targetIdField);
         
-        setTitle("Bank - ID: " + acc.getId());
-        setSize(300, 250);
-        setLayout(new GridLayout(4, 1, 5, 5));
+        centerPanel.add(new JLabel("Welcome, " + currentUser.getName(), SwingConstants.CENTER));
+        centerPanel.add(p1);
+        centerPanel.add(p2);
+        add(centerPanel, BorderLayout.CENTER);
 
-        balLab = new JLabel("Balance: ₹" + acc.getBalance(), 0);
+        // 3. Action Buttons
+        JPanel btnPanel = new JPanel(new GridLayout(2, 2, 5, 5));
         JButton depBtn = new JButton("Deposit");
         JButton withBtn = new JButton("Withdraw");
-        JButton exitBtn = new JButton("Save & Exit");
+        JButton transBtn = new JButton("Transfer Money");
+        JButton logoutBtn = new JButton("Logout & Save");
 
-        depBtn.addActionListener(e -> action(true));
-        withBtn.addActionListener(e -> action(false));
-        
-        // Using allAccounts here removes the "unused field" warning
-        exitBtn.addActionListener(e -> { 
-            AccountDAO.saveAccounts(allAccounts); 
-            System.exit(0); 
+        styleBtn(depBtn, new Color(46, 204, 113));
+        styleBtn(withBtn, new Color(230, 126, 34));
+        styleBtn(transBtn, new Color(155, 89, 182));
+        styleBtn(logoutBtn, new Color(231, 76, 60));
+
+        btnPanel.add(depBtn); btnPanel.add(withBtn);
+        btnPanel.add(transBtn); btnPanel.add(logoutBtn);
+        add(btnPanel, BorderLayout.SOUTH);
+
+        // Logic
+        depBtn.addActionListener(e -> handleAction("DEP"));
+        withBtn.addActionListener(e -> handleAction("WITH"));
+        transBtn.addActionListener(e -> handleTransfer());
+        logoutBtn.addActionListener(e -> {
+            AccountDAO.saveAccounts(allAccounts);
+            new LoginFrame(allAccounts);
+            this.dispose();
         });
-
-        add(balLab);
-        JPanel p = new JPanel(); p.add(new JLabel("₹")); p.add(amtField); add(p);
-        JPanel b = new JPanel(); b.add(depBtn); b.add(withBtn); add(b);
-        add(exitBtn);
 
         setLocationRelativeTo(null);
         setVisible(true);
     }
 
-   private void action(boolean isDep) {
-    try {
-        double amt = Double.parseDouble(amtField.getText());
-        
-        if (isDep) {
-            acc.deposit(amt);
-            updateUI("DEP", amt);
-        } else if (acc.withdraw(amt)) {
-            updateUI("WITH", amt);
-        } else {
-            JOptionPane.showMessageDialog(this, "Low Balance!", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-
-    } catch (NumberFormatException e) {
-     
-        JOptionPane.showMessageDialog(this, "Please enter a valid numeric amount.", "Input Error", JOptionPane.WARNING_MESSAGE);
-    } catch (HeadlessException e) {
-      
-        JOptionPane.showMessageDialog(this, "An error occurred: " + e.getMessage(), "System Error", JOptionPane.ERROR_MESSAGE);
+    private void styleBtn(JButton b, Color bg) {
+        b.setBackground(bg); b.setForeground(Color.WHITE); b.setFocusPainted(false);
     }
-     
-    amtField.setText("");
-}
 
-    private void updateUI(String type, double amt) {
-        balLab.setText("Balance: ₹" + acc.getBalance());
-        logger.log(type + " for ID " + acc.getId() + ": ₹" + amt); // Fixed log call
-        JOptionPane.showMessageDialog(this, "Success!");
+    private void handleAction(String type) {
+        try {
+            double amt = Double.parseDouble(amtField.getText());
+            if (type.equals("DEP")) service.deposit(currentUser, amt);
+            else if (!service.withdraw(currentUser, amt)) throw new Exception("Low Balance");
+            refreshUI("Success!");
+        } catch (Exception e) { JOptionPane.showMessageDialog(this, "Error: " + e.getMessage()); }
+    }
+
+    private void handleTransfer() {
+        try {
+            double amt = Double.parseDouble(amtField.getText());
+            int tId = Integer.parseInt(targetIdField.getText());
+            Account target = null;
+            for (Account a : allAccounts) if (a.getAccountNo() == tId) target = a;
+
+            if (target != null && service.transfer(currentUser, target, amt)) refreshUI("Transfer Sent!");
+            else JOptionPane.showMessageDialog(this, "Transfer Failed!");
+        } catch (Exception e) { JOptionPane.showMessageDialog(this, "Check Inputs!"); }
+    }
+
+    private void refreshUI(String msg) {
+        balLabel.setText("Current Balance: ₹" + currentUser.getBalance());
+        amtField.setText(""); targetIdField.setText("");
+        JOptionPane.showMessageDialog(this, msg);
     }
 }

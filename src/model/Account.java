@@ -1,31 +1,28 @@
 package model;
 
 public class Account {
-    private final int id;
+    private final int accountNo;
+    private String name;
+    private String password;
     private double balance;
 
-    public Account(int id, double initialBalance) {
-        this.id = id;
-        this.balance = initialBalance;
+    public Account(int accountNo, String name, String password, double balance) {
+        this.accountNo = accountNo;
+        this.name = name;
+        this.password = password;
+        this.balance = balance;
     }
 
-    public int getId() { return id; }
+    // Getters
+    public int getAccountNo() { return accountNo; }
+    public String getName() { return name; }
+    public String getPassword() { return password; }
     public synchronized double getBalance() { return balance; }
 
-    public synchronized void deposit(double amount) {
-        balance += amount;
-    }
-
-    public synchronized boolean withdraw(double amount) {
-        if (balance >= amount) {
-            balance -= amount;
-            return true;
-        }
+    // Logic
+    public synchronized void deposit(double amt) { if (amt > 0) balance += amt; }
+    public synchronized boolean withdraw(double amt) {
+        if (amt > 0 && balance >= amt) { balance -= amt; return true; }
         return false;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Account[id=%d, balance=%.2f]", id, balance);
     }
 }

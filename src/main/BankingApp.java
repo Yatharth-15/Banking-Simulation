@@ -1,21 +1,27 @@
 package main;
+
+import DB.AccountDAO;
 import gui.LoginFrame;
-import java.util.Arrays;
 import java.util.List;
 import javax.swing.SwingUtilities;
 import model.Account;
 
 public class BankingApp {
     public static void main(String[] args) {
-        List<Account> accounts = Arrays.asList(
-            new Account(1, 5000.0),
-            new Account(2, 3000.0),
-            new Account(3, 8500.0)
-        );
+        List<Account> accounts = AccountDAO.loadAccounts();
 
+      
+        if (accounts.isEmpty()) {
+            System.out.println("[System] Initializing database with default account...");
+          
+            accounts.add(new Account(101, "Admin User", "pass123", 5000.0));
+            AccountDAO.saveAccounts(accounts);
+        }
+
+       
         SwingUtilities.invokeLater(() -> {
             @SuppressWarnings("unused")
-            LoginFrame app = new LoginFrame(accounts);
+            LoginFrame login = new LoginFrame(accounts);
         });
     }
 }
