@@ -4,7 +4,7 @@ import DB.AccountDAO;
 import java.awt.*;
 import java.io.*;
 import java.util.List;
-import javax.swing.*; // Added for better boxes
+import javax.swing.*;
 import model.Account;
 import service.TransactionService;
 
@@ -22,7 +22,7 @@ public class DashboardFrame extends JFrame {
         this.allAccounts = accounts;
 
         setTitle("Secure Dashboard - " + currentUser.getName());
-        setSize(450, 600);
+        setSize(450, 650); // Increased height slightly for better spacing
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout(15, 15));
         getContentPane().setBackground(new Color(236, 240, 241));
@@ -38,24 +38,26 @@ public class DashboardFrame extends JFrame {
         header.add(nameLabel); header.add(balLabel);
         add(header, BorderLayout.NORTH);
 
-        // 2. Updated Boxes (Minimal UI Update)
+        // 2. Center Panel (Boxes)
         JPanel center = new JPanel(new GridLayout(4, 1, 10, 10));
         center.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
         center.setOpaque(false);
-        
-        // Setting Titled Borders for the boxes
         amtField.setBorder(BorderFactory.createTitledBorder("Enter Amount"));
         targetIdField.setBorder(BorderFactory.createTitledBorder("Recipient ID (for Transfer)"));
-        
         center.add(new JLabel("Transaction Details:")); 
         center.add(amtField);
         center.add(new JLabel("Recipient Details:")); 
         center.add(targetIdField);
         add(center, BorderLayout.CENTER);
 
-        // 3. Buttons
-        JPanel footer = new JPanel(new GridLayout(3, 2, 10, 10));
+        // 3. Footer Panel (Updated Layout for Centered Logout)
+        JPanel footer = new JPanel(new GridBagLayout());
         footer.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20));
+        footer.setOpaque(false);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5); // Spacing between buttons
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
 
         JButton depBtn = new JButton("Deposit");
         JButton withBtn = new JButton("Withdraw");
@@ -69,10 +71,21 @@ public class DashboardFrame extends JFrame {
         styleBtn(histBtn, new Color(52, 73, 94));
         styleBtn(logoutBtn, new Color(231, 76, 60));
 
-        footer.add(depBtn); footer.add(withBtn);
-        footer.add(transBtn); footer.add(histBtn);
-        footer.add(new JLabel("")); // Spacer
-        footer.add(logoutBtn);
+        // Row 0: Deposit and Withdraw
+        gbc.gridx = 0; gbc.gridy = 0; footer.add(depBtn, gbc);
+        gbc.gridx = 1; gbc.gridy = 0; footer.add(withBtn, gbc);
+
+        // Row 1: Transfer and View History
+        gbc.gridx = 0; gbc.gridy = 1; footer.add(transBtn, gbc);
+        gbc.gridx = 1; gbc.gridy = 1; footer.add(histBtn, gbc);
+
+        // Row 2: Logout centered in the middle
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridwidth = 2; // Make it span 2 columns
+        // Set a bit of padding to make it look "middle" and centered
+        gbc.insets = new Insets(15, 80, 5, 80); 
+        footer.add(logoutBtn, gbc);
+
         add(footer, BorderLayout.SOUTH);
 
         // Listeners
@@ -88,17 +101,25 @@ public class DashboardFrame extends JFrame {
 
     private void styleBtn(JButton b, Color bg) { b.setBackground(bg); b.setForeground(Color.WHITE); b.setFocusPainted(false); }
 
-    // --- UPDATED VERIFY METHOD WITH WRONG PIN MESSAGE ---
     private boolean verify() {
-        String pin = JOptionPane.showInputDialog(this, "Enter 4-Digit Security PIN:");
-        
-        if (pin == null) return false; // Cancelled
-
+        if (currentUser.isBlocked()) {
+            long secondsPassed = (System.currentTimeMillis() - currentUser.getLockTime()) / 1000;
+            if (secondsPassed >= 60) {
+                currentUser.setBlocked(false); currentUser.resetFailedAttempts();
+                AccountDAO.saveAccounts(allAccounts);
+            } else {
+                err("Blocked! Wait " + (60 - secondsPassed) + "s");
+                return false;
+            }
+        }
+        String pin = JOptionPane.showInputDialog(this, "Enter 4-Digit PIN:");
+        if (pin == null) return false;
         if (currentUser.verifyPin(pin)) {
-            return true;
+            currentUser.resetFailedAttempts(); return true;
         } else {
-            // New error message for wrong PIN
-            JOptionPane.showMessageDialog(this, "WRONG PIN! Access Denied.", "Security Alert", JOptionPane.ERROR_MESSAGE);
+            currentUser.recordFailedAttempt();
+            if (currentUser.isBlocked()) AccountDAO.saveAccounts(allAccounts);
+            err(currentUser.isBlocked() ? "3 Failures! Blocked for 1 min." : "Wrong PIN!");
             return false;
         }
     }
@@ -111,7 +132,7 @@ public class DashboardFrame extends JFrame {
         JOptionPane.showMessageDialog(this, m);
     }
 
-    private void err(String m) { JOptionPane.showMessageDialog(this, m, "Error", JOptionPane.ERROR_MESSAGE); }
+    private void err(String m) { JOptionPane.showMessageDialog(this, m, "Security", JOptionPane.ERROR_MESSAGE); }
 
     private void handleTransfer() {
         try {
@@ -135,7 +156,6 @@ public class DashboardFrame extends JFrame {
                 }
             }
         } catch (IOException e) { sb.append("No records found."); }
-
         JTextArea area = new JTextArea(sb.toString());
         area.setEditable(false);
         JOptionPane.showMessageDialog(this, new JScrollPane(area), "Mini-Statement", JOptionPane.INFORMATION_MESSAGE);
