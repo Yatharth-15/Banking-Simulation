@@ -23,18 +23,22 @@ public class TransactionService {
         return false;
     }
     // 3. TRANSFER 
-    public boolean transfer(Account from, Account to, double amt) {
-        if (from.withdraw(amt)) {
-            to.deposit(amt);
-            
-            logger.log(from.getAccountNo(), "TRANSFER: Sent to " + to.getName() + 
-            " (ID: " + to.getAccountNo() + ") | Amt: ₹" + amt);
-            logger.log(to.getAccountNo(), "TRANSFER: Received from " + from.getName() +
-             " (ID: " + from.getAccountNo() + ") | Amt: ₹" + amt);
-            
-            return true;
+   public void transfer(Account from, Account to, double amount) {
+
+    Account firstLock = from.getAccountNo() < to.getAccountNo() ? from : to;
+    Account secondLock = from.getAccountNo() < to.getAccountNo() ? to : from;
+
+    synchronized(firstLock) {
+        synchronized(secondLock) {
+
+            if (from.withdraw(amount)) {
+                to.deposit(amount);
+                System.out.println("Transfer successful");
+            } else {
+                System.out.println("Insufficient balance");
+            }
+
         }
-        logger.log(from.getAccountNo(), "FAILED_TRANSFER: " + from.getName() + " had insufficient funds for ₹" + amt);
-        return false;
     }
+   }
 }

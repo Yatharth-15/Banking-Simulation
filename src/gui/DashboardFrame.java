@@ -22,7 +22,7 @@ public class DashboardFrame extends JFrame {
         this.allAccounts = accounts;
 
         setTitle("Secure Dashboard - " + currentUser.getName());
-        setSize(450, 650); // Increased height slightly for better spacing
+        setSize(450, 650); 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout(15, 15));
         getContentPane().setBackground(new Color(236, 240, 241));
@@ -38,7 +38,7 @@ public class DashboardFrame extends JFrame {
         header.add(nameLabel); header.add(balLabel);
         add(header, BorderLayout.NORTH);
 
-        // 2. Center Panel (Boxes)
+        // 2. Center Panel
         JPanel center = new JPanel(new GridLayout(4, 1, 10, 10));
         center.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
         center.setOpaque(false);
@@ -50,12 +50,12 @@ public class DashboardFrame extends JFrame {
         center.add(targetIdField);
         add(center, BorderLayout.CENTER);
 
-        // 3. Footer Panel (Updated Layout for Centered Logout)
+        // 3. Footer Panel
         JPanel footer = new JPanel(new GridBagLayout());
         footer.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20));
         footer.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5); // Spacing between buttons
+        gbc.insets = new Insets(5, 5, 5, 5); 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
@@ -71,29 +71,46 @@ public class DashboardFrame extends JFrame {
         styleBtn(histBtn, new Color(52, 73, 94));
         styleBtn(logoutBtn, new Color(231, 76, 60));
 
-        // Row 0: Deposit and Withdraw
         gbc.gridx = 0; gbc.gridy = 0; footer.add(depBtn, gbc);
         gbc.gridx = 1; gbc.gridy = 0; footer.add(withBtn, gbc);
-
-        // Row 1: Transfer and View History
         gbc.gridx = 0; gbc.gridy = 1; footer.add(transBtn, gbc);
         gbc.gridx = 1; gbc.gridy = 1; footer.add(histBtn, gbc);
-
-        // Row 2: Logout centered in the middle
-        gbc.gridx = 0; gbc.gridy = 2;
-        gbc.gridwidth = 2; // Make it span 2 columns
-        // Set a bit of padding to make it look "middle" and centered
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2; 
         gbc.insets = new Insets(15, 80, 5, 80); 
         footer.add(logoutBtn, gbc);
-
         add(footer, BorderLayout.SOUTH);
 
-        // Listeners
-        depBtn.addActionListener(e -> { if(verify()) { service.deposit(currentUser, getAmt()); refresh("Deposit Done"); }});
-        withBtn.addActionListener(e -> { if(verify()) { if(service.withdraw(currentUser, getAmt())) refresh("Withdraw Done"); else err("Low Balance"); }});
+        // --- Action Listeners with Validation ---
+        
+        depBtn.addActionListener(e -> {
+            double amount = getAmt();
+            if (amount > 0 && verify()) {
+                service.deposit(currentUser, amount);
+                refresh("Deposit Done");
+            } else if (amount <= 0) {
+                err("Please enter a positive amount.");
+            }
+        });
+
+        withBtn.addActionListener(e -> {
+            double amount = getAmt();
+            if (amount > 0 && verify()) {
+                if (service.withdraw(currentUser, amount)) refresh("Withdraw Done");
+                else err("Low Balance");
+            } else if (amount <= 0) {
+                err("Please enter a positive amount.");
+            }
+        });
+
         transBtn.addActionListener(e -> handleTransfer());
+        
         histBtn.addActionListener(e -> showHistory());
-        logoutBtn.addActionListener(e -> { AccountDAO.saveAccounts(allAccounts); new LoginFrame(allAccounts); this.dispose(); });
+        
+        logoutBtn.addActionListener(e -> {
+            AccountDAO.saveAccounts(allAccounts);
+            new LoginFrame(allAccounts);
+            this.dispose();
+        });
 
         setLocationRelativeTo(null);
         setVisible(true);
@@ -124,7 +141,14 @@ public class DashboardFrame extends JFrame {
         }
     }
 
-    private double getAmt() { return Double.parseDouble(amtField.getText()); }
+    // Updated to handle empty or invalid text
+    private double getAmt() {
+        try {
+            return Double.parseDouble(amtField.getText());
+        } catch (NumberFormatException e) {
+            return -1; // Returns -1 to trigger the "positive amount" error
+        }
+    }
     
     private void refresh(String m) {
         balLabel.setText("Balance: ₹" + currentUser.getBalance());
@@ -132,18 +156,36 @@ public class DashboardFrame extends JFrame {
         JOptionPane.showMessageDialog(this, m);
     }
 
-    private void err(String m) { JOptionPane.showMessageDialog(this, m, "Security", JOptionPane.ERROR_MESSAGE); }
+    private void err(String m) { JOptionPane.showMessageDialog(this, m, "System Message", JOptionPane.ERROR_MESSAGE); }
 
     private void handleTransfer() {
+        double amount = getAmt();
+        if (amount <= 0) {
+            err("Please enter a valid positive amount.");
+            return;
+        }
+        
+        if (amount > currentUser.getBalance()) {
+            err("Insufficient Balance for this transfer.");
+            return;
+        }
+
         try {
-            if(verify()) {
-                int tId = Integer.parseInt(targetIdField.getText());
-                Account target = null;
-                for (Account a : allAccounts) if (a.getAccountNo() == tId) target = a;
-                if (target != null && target != currentUser && service.transfer(currentUser, target, getAmt())) refresh("Transfer Successful");
-                else err("Transfer Failed");
+            int tId = Integer.parseInt(targetIdField.getText());
+            Account target = null;
+            for (Account a : allAccounts) if (a.getAccountNo() == tId) target = a;
+
+            if (target != null && target != currentUser) {
+                if (verify()) {
+                    service.transfer(currentUser, target, amount);
+                    refresh("Transfer Successful");
+                }
+            } else {
+                err("Recipient ID not found or invalid.");
             }
-        } catch (Exception e) { err("Invalid Input"); }
+        } catch (NumberFormatException e) { 
+            err("Invalid Recipient ID"); 
+        }
     }
 
     private void showHistory() {
