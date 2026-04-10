@@ -10,35 +10,45 @@ public class TransactionService {
     public void deposit(Account acc, double amt) {
         if (amt > 0) {
             acc.deposit(amt);
-            logger.log(acc.getAccountNo(), "DEPOSIT: " + acc.getName() + " (ID: " + acc.getAccountNo() + ") Amt: ₹" + amt);
+            logger.log(acc.getAccountNo(), "DEPOSIT: ₹" + amt + " | New Balance: ₹" + acc.getBalance());
         }
     }
+
     // 2. WITHDRAW
     public boolean withdraw(Account acc, double amt) {
         if (acc.withdraw(amt)) {
-            logger.log(acc.getAccountNo(), "WITHDRAW: " + acc.getName() + " (ID: " + acc.getAccountNo() + ") Amt: ₹" + amt);
+            logger.log(acc.getAccountNo(), "WITHDRAW: ₹" + amt + " | New Balance: ₹" + acc.getBalance());
             return true;
         }
-        logger.log(acc.getAccountNo(), "FAILED_WITHDRAW: " + acc.getName() + " - Low Balance for ₹" + amt);
+        logger.log(acc.getAccountNo(), "FAILED_WITHDRAW: Low Balance for ₹" + amt);
         return false;
     }
+
     // 3. TRANSFER 
-   public void transfer(Account from, Account to, double amount) {
+    public boolean transfer(Account from, Account to, double amount) {
+        // Deadlock prevention logic (Already good!)
+        Account firstLock = from.getAccountNo() < to.getAccountNo() ? from : to;
+        Account secondLock = from.getAccountNo() < to.getAccountNo() ? to : from;
 
-    Account firstLock = from.getAccountNo() < to.getAccountNo() ? from : to;
-    Account secondLock = from.getAccountNo() < to.getAccountNo() ? to : from;
+        synchronized(firstLock) {
+            synchronized(secondLock) {
+                if (from.withdraw(amount)) {
+                    to.deposit(amount);
+                    
+                    // --- THE FIX: Update History for BOTH accounts ---
+                    String logMsgFrom = "TRANSFER_OUT: ₹" + amount + " to ID: " + to.getAccountNo();
+                    String logMsgTo = "TRANSFER_IN: ₹" + amount + " from ID: " + from.getAccountNo();
+                    
+                    logger.log(from.getAccountNo(), logMsgFrom);
+                    logger.log(to.getAccountNo(), logMsgTo);
 
-    synchronized(firstLock) {
-        synchronized(secondLock) {
-
-            if (from.withdraw(amount)) {
-                to.deposit(amount);
-                System.out.println("Transfer successful");
-            } else {
-                System.out.println("Insufficient balance");
+                    System.out.println("Transfer successful: ₹" + amount + " from " + from.getAccountNo() + " to " + to.getAccountNo());
+                    return true;
+                } else {
+                    System.out.println("Transfer failed: Insufficient balance in ID " + from.getAccountNo());
+                    return false;
+                }
             }
-
         }
     }
-   }
 }
