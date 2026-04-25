@@ -35,10 +35,12 @@ Run the batch file:
 cmd
 .\run_app.bat
 
+
 🔐 Default Admin Access
 To access the Admin Panel and approve loans or manage users, use the following default credentials:
 Admin ID: 101
 Password: admin123
+
 
 📁 Project Structure (MVC Architecture)
 src/DB/: Data Access Objects handling all MySQL queries and schema building.
