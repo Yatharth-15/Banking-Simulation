@@ -32,13 +32,16 @@ src/DB/LoanDAO.java
 A batch script is provided for easy compilation and execution on Windows machines.
 Open a terminal or command prompt in the project root directory.
 Run the batch file:
+
 cmd
 .\run_app.bat
 
 
 🔐 Default Admin Access
 To access the Admin Panel and approve loans or manage users, use the following default credentials:
+
 Admin ID: 101
+
 Password: admin123
 
 
