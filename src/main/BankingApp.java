@@ -12,8 +12,7 @@ public class BankingApp {
         List<Account> accounts = AccountDAO.loadAccounts();
         if (accounts.isEmpty()) {
             System.out.println("[System] No data found. Initializing Admin Account...");
-           
-            accounts.add(new Account(101, "Admin User", "admin123", "0000", 5000.0));
+            accounts.add(new model.SavingsAccount(101, "Admin User", "admin123", "0000", 5000.0));
         
             AccountDAO.saveAccounts(accounts);
         }

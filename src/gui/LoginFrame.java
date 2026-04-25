@@ -5,8 +5,11 @@ import java.awt.*;
 import java.util.List;
 import javax.swing.*;
 import model.Account;
+import model.SavingsAccount;
+import model.CurrentAccount;
 
 public class LoginFrame extends JFrame {
+    private static final int LOCKOUT_TIME_SECONDS = 60;
     private final List<Account> allAccounts;
     
     // Input Fields
@@ -14,10 +17,12 @@ public class LoginFrame extends JFrame {
     private final JPasswordField passField = new JPasswordField(15);
     private final JTextField nameField = new JTextField(15);
     private final JTextField pinField = new JTextField(15);
+    private final JComboBox<String> accTypeBox = new JComboBox<>(new String[]{"Savings", "Current"});
 
     // Labels
-    private final JLabel nameLabel = new JLabel("  Full Name:");
-    private final JLabel pinLabel = new JLabel("  Set 4-Digit PIN:");
+    private final JLabel nameLabel = new JLabel("Full Name:");
+    private final JLabel pinLabel = new JLabel("Set 4-Digit PIN:");
+    private final JLabel typeLabel = new JLabel("Account Type:");
     private boolean isRegisterMode = false;
 
     public LoginFrame(List<Account> accounts) {
@@ -58,8 +63,12 @@ public class LoginFrame extends JFrame {
         
         formPanel.add(nameLabel); formPanel.add(nameField);
         formPanel.add(pinLabel); formPanel.add(pinField);
+        formPanel.add(typeLabel); formPanel.add(accTypeBox);
         
-        add(formPanel, BorderLayout.CENTER);
+        JPanel centerWrapper = new JPanel(new BorderLayout());
+        centerWrapper.setOpaque(false);
+        centerWrapper.add(formPanel, BorderLayout.NORTH);
+        add(centerWrapper, BorderLayout.CENTER);
 
         // --- 3. BUTTONS ---
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 10, 10));
@@ -104,6 +113,7 @@ public class LoginFrame extends JFrame {
     private void setRegisterFieldsVisible(boolean v) {
         nameLabel.setVisible(v); nameField.setVisible(v);
         pinLabel.setVisible(v); pinField.setVisible(v);
+        typeLabel.setVisible(v); accTypeBox.setVisible(v);
         revalidate(); repaint();
     }
 
@@ -123,15 +133,19 @@ public class LoginFrame extends JFrame {
                 if (a.getAccountNo() == id && a.getPassword().equals(pass)) {
                     if (a.isBlocked()) {
                         long secondsPassed = (System.currentTimeMillis() - a.getLockTime()) / 1000;
-                        if (secondsPassed >= 60) {
+                        if (secondsPassed >= LOCKOUT_TIME_SECONDS) {
                             a.setBlocked(false); a.resetFailedAttempts();
                             AccountDAO.saveAccounts(allAccounts);
                         } else {
-                            JOptionPane.showMessageDialog(this, "Locked! Try again in " + (60 - secondsPassed) + "s", "Security", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(this, "Locked! Try again in " + (LOCKOUT_TIME_SECONDS - secondsPassed) + "s", "Security", JOptionPane.ERROR_MESSAGE);
                             return;
                         }
                     }
-                    new DashboardFrame(a, allAccounts);
+                    if (a.getAccountNo() == 101) {
+                        new AdminFrame(allAccounts);
+                    } else {
+                        new DashboardFrame(a, allAccounts);
+                    }
                     this.dispose(); return;
                 }
             }
@@ -146,10 +160,27 @@ public class LoginFrame extends JFrame {
             String name = nameField.getText();
             String pass = new String(passField.getPassword());
 
+            // Check for unique ID
+            for (Account a : allAccounts) {
+                if (a.getAccountNo() == id) {
+                    JOptionPane.showMessageDialog(this, "Account ID already exists. Please choose a unique ID.");
+                    return;
+                }
+            }
+
             if (name.isEmpty() || pass.isEmpty() || pin.length() != 4) {
                 JOptionPane.showMessageDialog(this, "Fill all fields (PIN: 4 digits)"); return;
             }
-            allAccounts.add(new Account(id, name, pass, pin, 1000.0));
+            
+            String type = (String) accTypeBox.getSelectedItem();
+            Account newAcc;
+            if ("Current".equals(type)) {
+                newAcc = new CurrentAccount(id, name, pass, pin, 1000.0);
+            } else {
+                newAcc = new SavingsAccount(id, name, pass, pin, 1000.0);
+            }
+            
+            allAccounts.add(newAcc);
             AccountDAO.saveAccounts(allAccounts);
             JOptionPane.showMessageDialog(this, "Success! Switch to Login.");
             isRegisterMode = false; setRegisterFieldsVisible(false);

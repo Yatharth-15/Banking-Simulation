@@ -7,16 +7,28 @@ public class TransactionService {
     private final TransactionLogger logger = new TransactionLogger();
 
     // 1. DEPOSIT
-    public void deposit(Account acc, double amt) {
+    public boolean deposit(Account acc, double amt) {
+        if (!acc.canTransact(amt)) {
+            logger.log(acc.getAccountNo(), "FAILED_DEPOSIT: Daily Limit Exceeded for ₹" + amt);
+            return false;
+        }
         if (amt > 0) {
             acc.deposit(amt);
+            acc.recordTransaction(amt);
             logger.log(acc.getAccountNo(), "DEPOSIT: ₹" + amt + " | New Balance: ₹" + acc.getBalance());
+            return true;
         }
+        return false;
     }
 
     // 2. WITHDRAW
     public boolean withdraw(Account acc, double amt) {
+        if (!acc.canTransact(amt)) {
+            logger.log(acc.getAccountNo(), "FAILED_WITHDRAW: Daily Limit Exceeded for ₹" + amt);
+            return false;
+        }
         if (acc.withdraw(amt)) {
+            acc.recordTransaction(amt);
             logger.log(acc.getAccountNo(), "WITHDRAW: ₹" + amt + " | New Balance: ₹" + acc.getBalance());
             return true;
         }
@@ -26,7 +38,11 @@ public class TransactionService {
 
     // 3. TRANSFER 
     public boolean transfer(Account from, Account to, double amount) {
-        // Deadlock prevention logic (Already good!)
+        if (!from.canTransact(amount)) {
+            System.out.println("Transfer failed: Daily Limit Exceeded in ID " + from.getAccountNo());
+            return false;
+        }
+        // Deadlock prevention logic: lock in consistent order
         Account firstLock = from.getAccountNo() < to.getAccountNo() ? from : to;
         Account secondLock = from.getAccountNo() < to.getAccountNo() ? to : from;
 
@@ -34,8 +50,9 @@ public class TransactionService {
             synchronized(secondLock) {
                 if (from.withdraw(amount)) {
                     to.deposit(amount);
+                    from.recordTransaction(amount);
                     
-                    // --- THE FIX: Update History for BOTH accounts ---
+                    // Update History for both accounts
                     String logMsgFrom = "TRANSFER_OUT: ₹" + amount + " to ID: " + to.getAccountNo();
                     String logMsgTo = "TRANSFER_IN: ₹" + amount + " from ID: " + from.getAccountNo();
                     
