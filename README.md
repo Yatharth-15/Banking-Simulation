@@ -1,6 +1,7 @@
 # Java Banking System Project
 
-This is my college project for a Java-based Banking Application. I built it using Core Java, Java Swing for the GUI, and MySQL for the database. It handles basic banking operations and has an admin panel.
+A complete Bank Management System developed in Java and MySQL. This project provides a simple GUI for users to deposit, withdraw, transfer funds, and apply for loans, while giving
+panel
 
 ## Features
 
