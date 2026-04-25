@@ -42,7 +42,11 @@ Password: admin123
 
 📁 Project Structure (MVC Architecture)
 src/DB/: Data Access Objects handling all MySQL queries and schema building.
+
 src/gui/: Swing components (LoginFrame, DashboardFrame, AdminFrame).
+
 src/model/: Business logic objects (Abstract Account, Loan).
+
 src/service/: Transaction controllers ensuring secure fund movements.
+
 src/logging/: Handles File I/O operations for transactions.log.
