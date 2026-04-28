@@ -90,7 +90,5 @@ public abstract class Account {
     public synchronized void deposit(double amt) { 
         if (amt > 0) balance += amt;
     }
-    
-    // Abstract method to be overridden by child classes
     public abstract boolean withdraw(double amt);
 }

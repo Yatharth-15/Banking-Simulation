@@ -50,7 +50,7 @@ public class AccountDAO {
                 ps.setString(9, a.getLastTransactionDate());
                 ps.setString(10, a.getAccountType());
                 
-                // For the "Update" part of the query
+
                 ps.setDouble(11, a.getBalance());
                 ps.setBoolean(12, a.isBlocked());
                 ps.setLong(13, a.getLockTime());
@@ -106,7 +106,7 @@ public class AccountDAO {
                 try {
                     acc.setDailyWithdrawn(rs.getDouble("daily_withdrawn"));
                     acc.setLastTransactionDate(rs.getString("last_transaction_date"));
-                } catch (SQLException ignore) { } // In case ensureSchema hasn't run yet for some reason
+                } catch (SQLException ignore) { } 
                 
                 accounts.add(acc);
             }
