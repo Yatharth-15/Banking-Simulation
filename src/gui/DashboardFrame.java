@@ -83,6 +83,7 @@ public class DashboardFrame extends JFrame {
         JButton interestBtn = new JButton("Apply Interest");
         JButton loanBtn = new JButton("Apply Loan");
         JButton myLoansBtn = new JButton("My Loans");
+        JButton downloadBtn = new JButton("Download Stmt");
 
         styleBtn(depBtn, new Color(52, 152, 219));
         styleBtn(withBtn, new Color(230, 126, 34));
@@ -92,6 +93,7 @@ public class DashboardFrame extends JFrame {
         styleBtn(interestBtn, new Color(39, 174, 96));
         styleBtn(loanBtn, new Color(241, 196, 15));
         styleBtn(myLoansBtn, new Color(142, 68, 173));
+        styleBtn(downloadBtn, new Color(22, 160, 133));
 
         gbc.gridx = 0; gbc.gridy = 0; footer.add(depBtn, gbc);
         gbc.gridx = 1; gbc.gridy = 0; footer.add(withBtn, gbc);
@@ -102,15 +104,19 @@ public class DashboardFrame extends JFrame {
         
         gbc.gridx = 0; gbc.gridy = nextY; gbc.gridwidth = 1;
         footer.add(loanBtn, gbc);
+        gbc.gridx = 1;
+        footer.add(myLoansBtn, gbc);
+        nextY++;
+
+        gbc.gridx = 0; gbc.gridy = nextY;
         if ("SAVINGS".equals(currentUser.getAccountType())) {
-            gbc.gridx = 1;
+            gbc.gridwidth = 1;
             footer.add(interestBtn, gbc);
-            nextY++;
-            gbc.gridx = 0; gbc.gridy = nextY; gbc.gridwidth = 2;
-            footer.add(myLoansBtn, gbc);
-        } else {
             gbc.gridx = 1;
-            footer.add(myLoansBtn, gbc);
+            footer.add(downloadBtn, gbc);
+        } else {
+            gbc.gridwidth = 2;
+            footer.add(downloadBtn, gbc);
         }
         nextY++;
 
@@ -157,6 +163,7 @@ public class DashboardFrame extends JFrame {
         
         loanBtn.addActionListener(e -> handleLoanApplication());
         myLoansBtn.addActionListener(e -> showMyLoans());
+        downloadBtn.addActionListener(e -> downloadStatement());
         
         logoutBtn.addActionListener(e -> {
             AccountDAO.saveAccounts(allAccounts);
@@ -336,6 +343,30 @@ public class DashboardFrame extends JFrame {
             } catch (NumberFormatException ex) {
                 err("Please enter valid numbers.");
             }
+        }
+    }
+    private void downloadStatement() {
+        String fileName = System.getProperty("user.home") 
+        + java.io.File.separator + "Downloads"
+         + java.io.File.separator + "Statement_" 
+         + currentUser.getAccountNo() + ".csv";
+        
+        try (PrintWriter pw = new PrintWriter(new FileWriter(fileName))) {
+            pw.println("Account Name," + currentUser.getName());
+            pw.println("Current Balance,₹" + currentUser.getBalance());
+            pw.println("\nTransaction Logs:");
+            
+            try (BufferedReader br = new BufferedReader(new FileReader("transactions.log"))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    if (line.startsWith(currentUser.getAccountNo() + " |")) {
+                        pw.println(line.replace(" | ", ","));
+                    }
+                }
+            }
+            refresh("Statement downloaded successfully as: " + fileName);
+        } catch (IOException e) {
+            err("Failed to save statement.");
         }
     }
 }
