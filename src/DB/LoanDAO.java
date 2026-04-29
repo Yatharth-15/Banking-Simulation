@@ -26,7 +26,7 @@ public class LoanDAO {
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
         } catch (SQLException e) {
-            System.err.println("Loan Schema Error: " + e.getMessage());
+            System.err.println("loan table error: " + e.getMessage());
         }
     }
 
@@ -44,7 +44,7 @@ public class LoanDAO {
             ps.setString(7, loan.getStatus());
             ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Apply Loan Error: " + e.getMessage());
+            System.err.println("error applying loan: " + e.getMessage());
         }
     }
 
@@ -68,7 +68,7 @@ public class LoanDAO {
                 ));
             }
         } catch (SQLException e) {
-            System.err.println("Get Pending Loans Error: " + e.getMessage());
+            System.err.println("error getting loans: " + e.getMessage());
         }
         return pendingLoans;
     }
@@ -80,7 +80,7 @@ public class LoanDAO {
             ps.setInt(1, loanId);
             ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Approve Loan Error: " + e.getMessage());
+            System.err.println("error approving: " + e.getMessage());
         }
     }
 
@@ -106,7 +106,7 @@ public class LoanDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Get User Loans Error: " + e.getMessage());
+            System.err.println("error fetching user loans: " + e.getMessage());
         }
         return userLoans;
     }

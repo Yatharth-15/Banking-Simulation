@@ -18,12 +18,12 @@ public class AdminFrame extends JFrame {
     public AdminFrame(List<Account> accounts) {
         this.allAccounts = accounts;
 
-        setTitle("City Bank - Admin Panel");
+        setTitle("Admin Panel");
         setSize(600, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Table Setup
+        // setup table
         String[] columns = {"Account ID", "Name", "Account Type", "Balance", "Blocked Status"};
         tableModel = new DefaultTableModel(columns, 0);
         table = new JTable(tableModel);
@@ -31,7 +31,7 @@ public class AdminFrame extends JFrame {
         
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // Buttons
+        // buttons
         JPanel buttonPanel = new JPanel();
         JButton unblockBtn = new JButton("Unblock Selected");
         JButton deleteBtn = new JButton("Delete Selected");
@@ -44,7 +44,7 @@ public class AdminFrame extends JFrame {
         buttonPanel.add(logoutBtn);
         add(buttonPanel, BorderLayout.SOUTH);
 
-        // Listeners
+        // button clicks
         unblockBtn.addActionListener(e -> {
             int selectedRow = table.getSelectedRow();
             if (selectedRow != -1) {
@@ -69,7 +69,7 @@ public class AdminFrame extends JFrame {
             if (selectedRow != -1) {
                 int id = (int) tableModel.getValueAt(selectedRow, 0);
                 if (id == 101) {
-                    JOptionPane.showMessageDialog(this, "Cannot delete Admin account!");
+                    JOptionPane.showMessageDialog(this, "Can't delete admin!");
                     return;
                 }
                 
@@ -77,7 +77,7 @@ public class AdminFrame extends JFrame {
                 if (confirm == JOptionPane.YES_OPTION) {
                     AccountDAO.deleteAccount(id);
                     allAccounts.removeIf(a -> a.getAccountNo() == id);
-                    JOptionPane.showMessageDialog(this, "Account deleted.");
+                    JOptionPane.showMessageDialog(this, "Done, deleted.");
                     refreshTable();
                 }
             } else {

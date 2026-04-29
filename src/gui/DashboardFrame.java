@@ -23,13 +23,13 @@ public class DashboardFrame extends JFrame {
         this.currentUser = user;
         this.allAccounts = accounts;
 
-        setTitle("Secure Dashboard - " + currentUser.getName() + " (" + currentUser.getAccountType() + ")");
+        setTitle("Dashboard - " + currentUser.getName() + " (" + currentUser.getAccountType() + ")");
         setSize(450, 650); 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout(15, 15));
         getContentPane().setBackground(new Color(236, 240, 241));
 
-        // 1. Header
+        // 1. Header part
         JPanel header = new JPanel(new GridLayout(2, 1));
         header.setBackground(new Color(44, 62, 80));
         JLabel nameLabel = new JLabel("Welcome, " + currentUser.getName() + " [" + currentUser.getAccountType() + "]", SwingConstants.CENTER);
@@ -125,18 +125,17 @@ public class DashboardFrame extends JFrame {
         footer.add(logoutBtn, gbc);
         add(footer, BorderLayout.SOUTH);
 
-        // --- Action Listeners with Validation ---
-        
+        // Event handling
         depBtn.addActionListener(e -> {
             double amount = getAmt();
             if (amount > 0 && verify()) {
                 if (service.deposit(currentUser, amount)) {
                     refresh("Deposit Done");
                 } else {
-                    err("Transaction Failed: Daily limit (₹20,000) exceeded.");
+                    err("Limit exceeded!"); // daily limit 20k
                 }
             } else if (amount <= 0) {
-                err("Please enter a positive amount.");
+                err("Enter positive amount plz");
             }
         });
 
@@ -144,9 +143,9 @@ public class DashboardFrame extends JFrame {
             double amount = getAmt();
             if (amount > 0 && verify()) {
                 if (service.withdraw(currentUser, amount)) refresh("Withdraw Done");
-                else err("Transaction Failed: Low balance or daily limit (₹20,000) exceeded.");
+                else err("Low balance or limit exceeded!");
             } else if (amount <= 0) {
-                err("Please enter a positive amount.");
+                err("Enter positive amount plz");
             }
         });
 
@@ -200,13 +199,11 @@ public class DashboardFrame extends JFrame {
             return false;
         }
     }
-
-    // Updated to handle empty or invalid text
     private double getAmt() {
         try {
             return Double.parseDouble(amtField.getText());
         } catch (NumberFormatException e) {
-            return -1; // Returns -1 to trigger the "positive amount" error
+            return -1; 
         }
     }
     
@@ -244,13 +241,13 @@ public class DashboardFrame extends JFrame {
                     if (amount >= 10000) {
                         int otp = 1000 + new java.util.Random().nextInt(9000);
                         System.out.println("\n========================================");
-                        System.out.println("[SECURITY] 2FA OTP for Transfer of ₹" + amount);
+                        System.out.println("[SECURITY]  OTP for Transfer of ₹" + amount);
                         System.out.println("[SECURITY] Your OTP is: " + otp);
                         System.out.println("========================================\n");
                         
-                        String inputOtp = JOptionPane.showInputDialog(this, "A security OTP has been sent to your phone.\n(Please check the terminal console)\n\nEnter 4-digit OTP:");
+                        String inputOtp = JOptionPane.showInputDialog(this, "OTP sent to console.\n\nEnter 4-digit OTP:");
                         if (inputOtp == null || !inputOtp.trim().equals(String.valueOf(otp))) {
-                            err("Transfer Failed: Incorrect OTP.");
+                            err("Wrong OTP.");
                             return;
                         }
                     }
@@ -258,7 +255,7 @@ public class DashboardFrame extends JFrame {
                     if (service.transfer(currentUser, target, amount)) {
                         refresh("Transfer Successful");
                     } else {
-                        err("Transaction Failed: Daily limit (₹20,000) exceeded.");
+                        err("Limit exceeded!");
                     }
                 }
             } else {
@@ -333,15 +330,15 @@ public class DashboardFrame extends JFrame {
                 double r = rate / 12;
                 double emi = (principal * r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1);
                 
-                String msg = String.format("Calculated EMI: ₹%.2f per month for %d months.\n\nDo you want to submit this application?", emi, months);
+                String msg = String.format("EMI is: ₹%.2f / month for %d months.\n\nSubmit?", emi, months);
                 int confirm = JOptionPane.showConfirmDialog(this, msg, "Confirm Application", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
                     Loan newLoan = new Loan(0, currentUser.getAccountNo(), typeName, principal, rate, months, emi, "PENDING");
                     DB.LoanDAO.applyLoan(newLoan);
-                    refresh("Loan Application Submitted! Waiting for Admin Approval.");
+                    refresh("Applied! Admin needs to approve it.");
                 }
             } catch (NumberFormatException ex) {
-                err("Please enter valid numbers.");
+                err("Invalid number.");
             }
         }
     }

@@ -7,7 +7,7 @@ import model.SavingsAccount;
 import model.CurrentAccount;
 
 public class AccountDAO {
-    // Database Credentials
+    // db details
     private static final String URL = "jdbc:mysql://localhost:3306/city_bank";
     private static final String USER = "root"; 
     private static final String PASS = "Root"; 
@@ -61,13 +61,13 @@ public class AccountDAO {
                 ps.addBatch();
             }
             ps.executeBatch();
-            System.out.println("[Database] MySQL Sync Complete.");
+            System.out.println("db updated.");
         } catch (SQLException e) {
-            System.err.println("MySQL Save Error: " + e.getMessage());
+            System.err.println("error saving: " + e.getMessage());
         }
     }
 
-    // Method to load all accounts from MySQL
+    // gets all accounts
     public static List<Account> loadAccounts() {
         List<Account> accounts = new ArrayList<>();
         String sql = "SELECT * FROM accounts";
@@ -111,7 +111,7 @@ public class AccountDAO {
                 accounts.add(acc);
             }
         } catch (SQLException e) {
-            System.err.println("MySQL Load Error: " + e.getMessage());
+            System.err.println("load error: " + e.getMessage());
         }
         return accounts;
     } 
@@ -122,7 +122,7 @@ public class AccountDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, accountNo);
             ps.executeUpdate();
-            System.out.println("[Database] Account " + accountNo + " deleted successfully.");
+            System.out.println("account " + accountNo + " deleted");
         } catch (SQLException e) {
             System.err.println("MySQL Delete Error: " + e.getMessage());
         }

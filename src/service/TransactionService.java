@@ -6,7 +6,7 @@ import model.Account;
 public class TransactionService {
     private final TransactionLogger logger = new TransactionLogger();
 
-    // 1. DEPOSIT
+    // deposit money
     public boolean deposit(Account acc, double amt) {
         if (!acc.canTransact(amt)) {
             logger.log(acc.getAccountNo(), "FAILED_DEPOSIT: Daily Limit Exceeded for ₹" + amt);
@@ -21,7 +21,7 @@ public class TransactionService {
         return false;
     }
 
-    // 2. WITHDRAW
+    // withdraw money
     public boolean withdraw(Account acc, double amt) {
         if (!acc.canTransact(amt)) {
             logger.log(acc.getAccountNo(), "FAILED_WITHDRAW: Daily Limit Exceeded for ₹" + amt);
@@ -36,13 +36,13 @@ public class TransactionService {
         return false;
     }
 
-    // 3. TRANSFER 
+    // transfer funds
     public boolean transfer(Account from, Account to, double amount) {
         if (!from.canTransact(amount)) {
             System.out.println("Transfer failed: Daily Limit Exceeded in ID " + from.getAccountNo());
             return false;
         }
-        // Deadlock prevention logic: lock in consistent order
+        // preventing deadlocks by ordering locks
         Account firstLock = from.getAccountNo() < to.getAccountNo() ? from : to;
         Account secondLock = from.getAccountNo() < to.getAccountNo() ? to : from;
 

@@ -19,7 +19,6 @@ public class LoginFrame extends JFrame {
     private final JTextField pinField = new JTextField(15);
     private final JComboBox<String> accTypeBox = new JComboBox<>(new String[]{"Savings", "Current"});
 
-    // Labels
     private final JLabel nameLabel = new JLabel("Full Name:");
     private final JLabel pinLabel = new JLabel("Set 4-Digit PIN:");
     private final JLabel typeLabel = new JLabel("Account Type:");
@@ -28,15 +27,15 @@ public class LoginFrame extends JFrame {
     public LoginFrame(List<Account> accounts) {
         this.allAccounts = accounts;
         
-        setTitle("City Bank - Secure Access");
-        setSize(400, 600); // Taller to accommodate the header
+        setTitle("City Bank Login");
+        setSize(400, 600); 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLayout(new BorderLayout()); // Using BorderLayout for the Header/Form/Footer structure
+        setLayout(new BorderLayout()); 
         getContentPane().setBackground(new Color(245, 245, 250));
 
-        // --- 1. BRANDING HEADER ---
+        // --- 1. Top banner ---
         JPanel brandPanel = new JPanel(new GridLayout(2, 1));
-        brandPanel.setBackground(new Color(44, 62, 80)); // Professional Dark Navy
+        brandPanel.setBackground(new Color(44, 62, 80)); 
         brandPanel.setPreferredSize(new Dimension(400, 120));
 
         JLabel bankName = new JLabel("CITY BANK", SwingConstants.CENTER);
@@ -45,13 +44,13 @@ public class LoginFrame extends JFrame {
         
         JLabel tagline = new JLabel("Digital Banking Simplified", SwingConstants.CENTER);
         tagline.setFont(new Font("SansSerif", Font.ITALIC, 14));
-        tagline.setForeground(new Color(46, 204, 113)); // Success Green
+        tagline.setForeground(new Color(46, 204, 113)); 
 
         brandPanel.add(bankName);
         brandPanel.add(tagline);
         add(brandPanel, BorderLayout.NORTH);
 
-        // --- 2. INPUT FORM ---
+        // --- 2. Form for details ---
         JPanel formPanel = new JPanel(new GridLayout(10, 1, 5, 5));
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
         formPanel.setOpaque(false);
@@ -137,7 +136,7 @@ public class LoginFrame extends JFrame {
                             a.setBlocked(false); a.resetFailedAttempts();
                             AccountDAO.saveAccounts(allAccounts);
                         } else {
-                            JOptionPane.showMessageDialog(this, "Locked! Try again in " + (LOCKOUT_TIME_SECONDS - secondsPassed) + "s", "Security", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(this, "Wait " + (LOCKOUT_TIME_SECONDS - secondsPassed) + "s", "Locked", JOptionPane.ERROR_MESSAGE);
                             return;
                         }
                     }
@@ -160,16 +159,15 @@ public class LoginFrame extends JFrame {
             String name = nameField.getText();
             String pass = new String(passField.getPassword());
 
-            // Check for unique ID
             for (Account a : allAccounts) {
                 if (a.getAccountNo() == id) {
-                    JOptionPane.showMessageDialog(this, "Account ID already exists. Please choose a unique ID.");
+                    JOptionPane.showMessageDialog(this, "ID is taken, try another.");
                     return;
                 }
             }
 
             if (name.isEmpty() || pass.isEmpty() || pin.length() != 4) {
-                JOptionPane.showMessageDialog(this, "Fill all fields (PIN: 4 digits)"); return;
+                JOptionPane.showMessageDialog(this, "Fill everything properly (PIN 4 digits)"); return;
             }
             
             String type = (String) accTypeBox.getSelectedItem();
@@ -182,7 +180,7 @@ public class LoginFrame extends JFrame {
             
             allAccounts.add(newAcc);
             AccountDAO.saveAccounts(allAccounts);
-            JOptionPane.showMessageDialog(this, "Success! Switch to Login.");
+            JOptionPane.showMessageDialog(this, "Done! Go to login now.");
             isRegisterMode = false; setRegisterFieldsVisible(false);
         } catch (Exception e) { JOptionPane.showMessageDialog(this, "Invalid Data!"); }
     }
