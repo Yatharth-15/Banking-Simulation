@@ -16,6 +16,7 @@ public class BankingApp {
         
             AccountDAO.saveAccounts(accounts);
         }
+        
         SwingUtilities.invokeLater(() -> {
             new LoginFrame(accounts);
             System.out.println("[System] GUI Launched Successfully.");
